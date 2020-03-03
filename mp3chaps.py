@@ -16,6 +16,7 @@ from eyed3.id3 import Tag
 from eyed3 import core
 from docopt import docopt
 import os
+import math
 
 def list_chaps(tag):
   "list chapters in tag"
@@ -44,7 +45,7 @@ def parse_chapters_file(fname):
 def add_chapters(tag, fname):
   chaps = parse_chapters_file(fname)
   audioFile = core.load(fname)
-  total_length = audioFile.info.time_secs * 1000
+  total_length = math.ceil(audioFile.info.time_secs * 1000)
   chaps_ = []
   for i, chap in enumerate(chaps):
     if i < (len(chaps)-1):
@@ -53,13 +54,13 @@ def add_chapters(tag, fname):
   index = 0
   child_ids = []
   for chap in chaps_:
-    element_id = "ch{}".format(index)
+    element_id = "ch{}".format(index).encode()
     times, title = chap
     new_chap = tag.chapters.set(element_id, times)
     new_chap.sub_frames.setTextFrame(b"TIT2", u"{}".format(title))
     child_ids.append(element_id)
     index += 1
-  tag.table_of_contents.set("toc", child_ids=child_ids)
+  tag.table_of_contents.set(b"toc", child_ids=child_ids)
   list_chaps(tag)
   tag.save()
 
